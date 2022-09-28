@@ -66,7 +66,7 @@ miner1 = [ [0, 0, 0, 2, 0, 0, 0, 0, 0,],
            [0, 0, 1, 1, 1, 0, 0, 0, 0,],
            [0, 0, 0, 2, 1, 2, 0, 0, 0,],
            [0, 0, 2, 2, 2, 2, 2, 2, 0,],
-           [1, 2, 0, 0, 2, 2, 0, 1, 1,],
+           [1, 2, 0, 0, 2, 2, 0, 2, 1,],
            [0, 0, 0, 0, 1, 1, 0, 0, 0,],
            [0, 0, 0, 1, 0, 1, 0, 0, 0,],
            [0, 0, 1, 1, 0, 1, 1, 2, 2,],
@@ -78,15 +78,39 @@ miner2 = [ [0, 0, 0, 2, 0, 0, 0,],
            [0, 0, 1, 1, 1, 0, 0,],
            [0, 0, 0, 2, 2, 2, 0,],
            [0, 0, 2, 2, 2, 2, 2,],
-           [2, 2, 2, 1, 1, 2, 2,],
+           [1, 2, 2, 1, 1, 2, 2,],
            [0, 0, 1, 1, 1, 0, 0,],
            [0, 0, 0, 1, 1, 0, 0,],
            [0, 0, 0, 1, 1, 0, 0,],
            [0, 0, 0, 1, 1, 2, 0,],
            [0, 0, 0, 2, 2, 0, 0,], ]
 
+miner3 = [ [0, 0, 2, 0, 0, 0, 0,],
+           [0, 1, 1, 2, 0, 0, 0,],
+           [0, 1, 1, 1, 0, 0, 0,],
+           [0, 0, 1, 1, 0, 0, 0,],
+           [1, 0, 2, 2, 2, 2, 0,],
+           [2, 2, 2, 2, 0, 2, 1,],
+           [0, 0, 2, 2, 0, 0, 0,],
+           [0, 1, 1, 1, 1, 0, 0,],
+           [1, 1, 0, 0, 1, 1, 0,],
+           [2, 2, 0, 0, 0, 1, 0,],
+           [0, 0, 0, 0, 0, 2, 2,], ]
 
-def _init_surface(pattern, colors, scale):
+miner4 = [ [0, 0, 0, 2, 0, 0, 0,],
+           [0, 0, 1, 1, 2, 0, 0,],
+           [0, 0, 1, 1, 1, 0, 0,],
+           [0, 0, 0, 1, 1, 0, 0,],
+           [0, 0, 0, 2, 2, 2, 0,],
+           [0, 0, 2, 2, 2, 2, 2,],
+           [1, 2, 2, 2, 1, 2, 2,],
+           [0, 0, 0, 1, 1, 1, 0,],
+           [0, 0, 1, 1, 0, 1, 0,],
+           [0, 0, 1, 1, 0, 1, 1,],
+           [0, 0, 2, 2, 0, 2, 2,], ]
+
+
+def _init_surface(pattern, colors, scale, flip):
     height = len(pattern)
     width = len(pattern[0])
 
@@ -97,26 +121,53 @@ def _init_surface(pattern, colors, scale):
         for x in range(0, width):
             pixarray[x,y] = colors[pattern[y][x]]
 
+    if flip:
+        surface = pygame.transform.flip(surface, flip, False)
+
     return pygame.transform.scale(surface, (scale*width, scale*height))
 
-class Miner(pygame.sprite.Sprite):
-
-    # Constructor. Pass in the color of the block,
-    # and its x and y position
-    def __init__(self, pattern, size, tile_size, scale, group):
+class Sprite(pygame.sprite.Sprite):
+    def __init__(self, pattern, size, tile_size, scale, pos, flip):
         # Call the parent class (Sprite) constructor
         pygame.sprite.Sprite.__init__(self)
 
         # Create an image of the block, and fill it with a color.
         # This could also be an image loaded from the disk.
-        self.image = _init_surface(pattern, [(0,0,0,0),(255,101,0,255),(255,255,99,255)], scale)
+        self.image = _init_surface(pattern, [(0,0,0,0),(255,101,0,255),(255,255,99,255)], scale, flip)
         self.size = size
         self.tile_size = tile_size
         self.scale = scale
 
-        self.rect = 80,0
-        self.pos = 140,0
-        pygame.sprite.Sprite.add(self, group)
+        self.rect = pos
+        # self.pos = pos
+
+class Miner():
+
+    # Constructor. Pass in the color of the block,
+    # and its x and y position
+    def __init__(self, sprites, size, tile_size, scale, pos, group):
+        # self.sprite = Sprite(pattern, size, tile_size, scale, pos)
+        self.sprites = sprites
+        self.sprite_dir = 0
+        self.sprite_id = 0
+        self.sprite = self.sprites[self.sprite_dir][self.sprite_id]
+        self.group = group
+
+        # Call the parent class (Sprite) constructor
+        # pygame.sprite.Sprite.__init__(self)
+
+        # Create an image of the block, and fill it with a color.
+        # This could also be an image loaded from the disk.
+#         self.image = _init_surface(pattern, [(0,0,0,0),(255,101,0,255),(255,255,99,255)], scale)
+        self.size = size
+        self.tile_size = tile_size
+        self.scale = scale
+
+        self.sprite.rect = pos
+        self.pos = pos
+
+        self.sprite.add(self.group)
+        # pygame.sprite.Sprite.add(self, group)
 
     def _get_tiles(self, pos):
         x, y = pos
@@ -233,6 +284,8 @@ class Miner(pygame.sprite.Sprite):
                     dir = LodeRunner.DIR_DOWN
                     break
 
+        self.sprite_dir = dir-1
+
         print ("m1 - X", off_y, tiles)
 
         dir_ids = LodeRunner.DIR_CHECKS[dir]
@@ -242,8 +295,18 @@ class Miner(pygame.sprite.Sprite):
         if solid:
             return
 
+        self.sprite_id += 1
+        if self.sprite_id // 8 >= len(self.sprites[self.sprite_dir]):
+            self.sprite_id = 0
+
+        print("mm", self.sprite_id)
+
+        self.sprite.kill()
+        self.sprite = self.sprites[self.sprite_dir][self.sprite_id // 8]
+        self.sprite.add(self.group)
+
         self.pos = tx, ty
-        self.rect = tx * self.scale, ty * self.scale
+        self.sprite.rect = tx * self.scale, ty * self.scale
 
 class LodeRunner:
     right_arrow=[(-50,-25),(0,-25),(0,-50),(50,0),(0,50),(0,25),(-50,25)]
@@ -277,7 +340,7 @@ class LodeRunner:
 
         self.tiles = []
         for (tile, solid) in screen['tiles']:
-            self.tiles.append(_init_surface(tile, self.colors, scale))
+            self.tiles.append(_init_surface(tile, self.colors, scale, False))
 
         self.layout = screen['layout']
         self.tile_attrs = [ [0 for y in range(0, height)] for x in range(0, width)]
@@ -307,8 +370,15 @@ class LodeRunner:
         pygame.display.set_caption('Snake solver')
         pygame.Surface.blit(self.display, self.background, (0, 0))
 
+        self.miner_sprites = []
+
+        self.miner_sprites.append([Sprite(i, (8, 11), self.tile_size, 3, (80, 0), True) for i in [miner3, miner2, miner1]])
+        self.miner_sprites.append([Sprite(miner1, (8, 11), self.tile_size, 3, (80, 0), True)])
+        self.miner_sprites.append([Sprite(i, (8, 11), self.tile_size, 3, (80, 0), False) for i in [miner1, miner2, miner3]])
+        self.miner_sprites.append([Sprite(miner1, (8, 11), self.tile_size, 3, (80, 0), True)])
+
         self.group = pygame.sprite.Group()
-        self.miner = Miner(miner1, (8, 11), self.tile_size, 3, self.group)
+        self.miner = Miner(self.miner_sprites, (8, 11), self.tile_size, 3, (80, 0), self.group)
 
     def mainloop(self):
         key_map = {pygame.K_RIGHT: self.DIR_RIGHT,
