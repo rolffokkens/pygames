@@ -115,11 +115,11 @@ def _init_surface(pattern, colors, scale, flip):
     width = len(pattern[0])
 
     surface = pygame.Surface((width, height), pygame.SRCALPHA)
-    pixarray = pygame.PixelArray(surface)
+    pix_array = pygame.PixelArray(surface)
 
     for y in range(0, height):
         for x in range(0, width):
-            pixarray[x, y] = colors[pattern[y][x]]
+            pix_array[x, y] = colors[pattern[y][x]]
 
     if flip:
         surface = pygame.transform.flip(surface, flip, False)
@@ -128,13 +128,13 @@ def _init_surface(pattern, colors, scale, flip):
 
 
 class Sprite(pygame.sprite.Sprite):
-    def __init__(self, pattern, size, tile_size, scale, pos, flip):
+    def __init__(self, pattern, colors, size, tile_size, scale, pos, flip):
         # Call the parent class (Sprite) constructor
         pygame.sprite.Sprite.__init__(self)
 
         # Create an image of the block, and fill it with a color.
         # This could also be an image loaded from the disk.
-        self.image = _init_surface(pattern, [(0, 0, 0, 0), (255, 101, 0, 255), (255, 255, 99, 255)], scale, flip)
+        self.image = _init_surface(pattern, colors, scale, flip)
         self.size = size
         self.tile_size = tile_size
         self.scale = scale
@@ -145,19 +145,12 @@ class Sprite(pygame.sprite.Sprite):
 
 class Miner:
     def __init__(self, sprites, size, tile_size, scale, pos, group):
-        # self.sprite = Sprite(pattern, size, tile_size, scale, pos)
         self.sprites = sprites
         self.sprite_dir = 0
         self.sprite_id = 0
         self.sprite = self.sprites[self.sprite_dir][self.sprite_id]
         self.group = group
 
-        # Call the parent class (Sprite) constructor
-        # pygame.sprite.Sprite.__init__(self)
-
-        # Create an image of the block, and fill it with a color.
-        # This could also be an image loaded from the disk.
-#         self.image = _init_surface(pattern, [(0,0,0,0),(255,101,0,255),(255,255,99,255)], scale)
         self.size = size
         self.tile_size = tile_size
         self.scale = scale
@@ -166,7 +159,6 @@ class Miner:
         self.pos = pos
 
         self.sprite.add(self.group)
-        # pygame.sprite.Sprite.add(self, group)
 
     def _get_tiles(self, pos):
         x, y = pos
@@ -277,8 +269,6 @@ class Miner:
         if self.sprite_id // 8 >= len(self.sprites[self.sprite_dir]):
             self.sprite_id = 0
 
-        print("mm", self.sprite_id)
-
         self.sprite.kill()
         self.sprite = self.sprites[self.sprite_dir][self.sprite_id // 8]
         self.sprite.add(self.group)
@@ -339,12 +329,15 @@ class LodeRunner:
         pygame.display.set_caption('Snake solver')
         pygame.Surface.blit(self.display, self.background, (0, 0))
 
-        self.miner_sprites = []
+        colors = [(0, 0, 0, 0), (255, 101, 0, 255), (255, 255, 99, 255)]
 
-        self.miner_sprites.append([Sprite(i, (8, 11), self.tile_size, 3, (80, 0), True) for i in [miner3, miner2, miner1]])
-        self.miner_sprites.append([Sprite(miner5, (8, 11), self.tile_size, 3, (80, 0), False)])
-        self.miner_sprites.append([Sprite(i, (8, 11), self.tile_size, 3, (80, 0), False) for i in [miner1, miner2, miner3]])
-        self.miner_sprites.append([Sprite(miner5, (8, 11), self.tile_size, 3, (80, 0), False)])
+        self.miner_sprites = []
+        for flip, sprites, in [(True, [miner3, miner2, miner1]),
+                               (False, [miner5]),
+                               (False, [miner1, miner2, miner3]),
+                               (False, [miner5]),
+                               ]:
+            self.miner_sprites.append([Sprite(i, colors, (8, 11), self.tile_size, 3, (80, 0), flip) for i in sprites])
 
         self.group = pygame.sprite.Group()
         self.miner = Miner(self.miner_sprites, (8, 11), self.tile_size, 3, (80, 0), self.group)
