@@ -48,6 +48,18 @@ line = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ], ]
 
+dummy = [[0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+         [0, 1, 1, 1, 1, 1, 1, 1, 0, ],
+         [0, 1, 0, 0, 0, 0, 0, 1, 0, ],
+         [0, 1, 0, 0, 0, 0, 0, 1, 0, ],
+         [0, 1, 0, 0, 0, 0, 0, 1, 0, ],
+         [0, 1, 0, 0, 0, 0, 0, 1, 0, ],
+         [0, 1, 0, 0, 0, 0, 0, 1, 0, ],
+         [0, 1, 0, 0, 0, 0, 0, 1, 0, ],
+         [0, 1, 0, 0, 0, 0, 0, 1, 0, ],
+         [0, 1, 1, 1, 1, 1, 1, 1, 0, ],
+         [0, 0, 0, 0, 0, 0, 0, 0, 0, ], ]
+
 miner1 = [[0, 0, 0, 2, 0, 0, 0, 0, 0, ],
           [0, 0, 1, 1, 2, 0, 0, 0, 0, ],
           [0, 0, 1, 1, 1, 0, 0, 0, 0, ],
@@ -148,8 +160,11 @@ class Miner:
         self.sprites = sprites
         self.sprite_dir = 0
         self.sprite_id = 0
-        self.sprite = self.sprites[self.sprite_dir][self.sprite_id]
+        self.sprite = self.sprites[LodeRunner.SPRITE_STAND][self.sprite_dir][self.sprite_id]
         self.group = group
+
+        self.hang = False
+        self.stand = False
 
         self.size = size
         self.tile_size = tile_size
@@ -199,22 +214,25 @@ class Miner:
 
         off_y, tiles = self._get_tiles((x, y))
 
+        self.hang = False
         if off_y == 0:
             for i in [0, 1]:
                 tx, ty = tiles[i]
                 if tile_attrs[tx][ty] & LodeRunner.MASK_HANG:
-                    return False
+                    print("m2", tx, ty)
+                    self.hang = True
 
+        self.stand = False
         for i in [2, 3]:
             tx, ty = tiles[i]
-            if not tile_attrs[tx][ty] & LodeRunner.MASK_FALL:
-                continue
             tx, ty, solid = self._check_hit_solid(tile_attrs, screen_size, (x, y), LodeRunner.DIR_DOWN,
                                                   LodeRunner.MASK_SOLID | LodeRunner.MASK_STAND)
-            if not solid:
-                return True
+            if solid:
+                self.stand = True
 
-        return False
+        print("m1", x, y, self.stand, self.hang)
+
+        return not self.hang and not self.stand
 
     def _check_climb(self, tile_attrs):
         x, y = self.pos
@@ -232,9 +250,8 @@ class Miner:
     def move(self, tile_attrs, screen_size, direction):
         x, y = self.pos
 
-        if direction != LodeRunner.DIR_DOWN:
-            if self._check_fall(tile_attrs, screen_size):
-                direction = LodeRunner.DIR_DOWN
+        if self._check_fall(tile_attrs, screen_size):
+            direction = LodeRunner.DIR_DOWN
 
         off_y, tiles = self._get_tiles((x, y))
 
@@ -259,18 +276,27 @@ class Miner:
                     direction = LodeRunner.DIR_DOWN
                     break
 
-        self.sprite_dir = direction-1
+        self.sprite_dir = direction
 
         tx, ty, solid = self._check_hit_solid(tile_attrs, screen_size, (x, y), direction, LodeRunner.MASK_SOLID)
         if solid:
             return
 
+        if self.stand or not self.hang:
+            sprite_type = LodeRunner.SPRITE_STAND
+        else:
+            sprite_type = LodeRunner.SPRITE_HANG
+
+        sprite_dir = self.sprite_dir if self.sprite_dir < LodeRunner.DIR_NONE else LodeRunner.DIR_DOWN
+
+        sprites = self.sprites[sprite_type]
+
         self.sprite_id += 1
-        if self.sprite_id // 8 >= len(self.sprites[self.sprite_dir]):
+        if self.sprite_id // 8 >= len(sprites[sprite_dir]):
             self.sprite_id = 0
 
         self.sprite.kill()
-        self.sprite = self.sprites[self.sprite_dir][self.sprite_id // 8]
+        self.sprite = sprites[sprite_dir][self.sprite_id // 8]
         self.sprite.add(self.group)
 
         self.pos = tx, ty
@@ -280,18 +306,20 @@ class Miner:
 class LodeRunner:
     right_arrow = [(-50, -25), (0, -25), (0, -50), (50, 0), (0, 50), (0, 25), (-50, 25)]
 
-    DIRS = [(0, 0), (1, 0), (0, -1), (-1, 0), (0, 1)]
-    DIR_NONE = 0
-    DIR_RIGHT = 1
-    DIR_UP = 2
-    DIR_LEFT = 3
-    DIR_DOWN = 4
+    DIRS = [(1, 0), (0, -1), (-1, 0), (0, 1), (0,0)]
+    DIR_RIGHT = 0
+    DIR_UP = 1
+    DIR_LEFT = 2
+    DIR_DOWN = 3
+    DIR_NONE = 4
 
     MASK_SOLID = 1
     MASK_STAND = 2
     MASK_HANG = 4
     MASK_CLIMB = 8
-    MASK_FALL = 16
+
+    SPRITE_STAND = 0
+    SPRITE_HANG = 1
 
     # DIR_CHECKS=[([],0), ([1,2],MASK_RIGHT),([0,1],MASK_UP),([0,3],MASK_LEFT),([2,3],MASK_DOWN)]
     DIR_CHECKS = [[], [1, 2], [0, 1], [0, 3], [2, 3]]
@@ -326,18 +354,26 @@ class LodeRunner:
         self.background = self._draw_screen(screen1, 3)
 
         self.display = pygame.display.set_mode(self.background.get_size())
-        pygame.display.set_caption('Snake solver')
+        pygame.display.set_caption('Lode Runner')
         pygame.Surface.blit(self.display, self.background, (0, 0))
 
         colors = [(0, 0, 0, 0), (255, 101, 0, 255), (255, 255, 99, 255)]
 
         self.miner_sprites = []
-        for flip, sprites, in [(True, [miner3, miner2, miner1]),
-                               (False, [miner5]),
-                               (False, [miner1, miner2, miner3]),
-                               (False, [miner5]),
-                               ]:
-            self.miner_sprites.append([Sprite(i, colors, (8, 11), self.tile_size, 3, (80, 0), flip) for i in sprites])
+        for _ in [self.SPRITE_STAND, self.SPRITE_HANG]:
+            self.miner_sprites.append([])
+
+        for sprite_type, flip, sprites, in [(self.SPRITE_STAND, True, [miner3, miner2, miner1]),
+                                            (self.SPRITE_STAND, False, [miner5]),
+                                            (self.SPRITE_STAND, False, [miner1, miner2, miner3]),
+                                            (self.SPRITE_STAND, False, [miner5]),
+                                            (self.SPRITE_HANG, False, [dummy]),
+                                            (self.SPRITE_HANG, False, [dummy]),
+                                            (self.SPRITE_HANG, False, [dummy]),
+                                            (self.SPRITE_HANG, False, [dummy]),
+                                            ]:
+            sprites = [Sprite(i, colors, (8, 11), self.tile_size, 3, (80, 0), flip) for i in sprites]
+            self.miner_sprites[sprite_type].append(sprites)
 
         self.group = pygame.sprite.Group()
         self.miner = Miner(self.miner_sprites, (8, 11), self.tile_size, 3, (80, 0), self.group)
@@ -367,10 +403,10 @@ class LodeRunner:
                 game_over = True
 
 
-screen1 = {'tiles': [(nothing, LodeRunner.MASK_FALL),
+screen1 = {'tiles': [(nothing, 0),
                      (bricks, LodeRunner.MASK_SOLID),
                      (ladder, LodeRunner.MASK_STAND | LodeRunner.MASK_CLIMB),
-                     (line, LodeRunner.MASK_FALL | LodeRunner.MASK_HANG)
+                     (line, LodeRunner.MASK_HANG)
                      ],
            'colors': [(0, 0, 0, 255), (99, 0, 0, 255), (255, 101, 0, 255)],
            'size': (26, 16),
