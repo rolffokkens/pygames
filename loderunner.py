@@ -24,6 +24,18 @@ bricks = [[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, ],
           [1, 1, 1, 1, 1, 0, 2, 1, 1, 1, 1, 1, ],
           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ], ]
 
+goldpile = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+            [0, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0, 0, ],
+            [0, 0, 0, 0, 2, 2, 3, 3, 0, 0, 0, 0, ],
+            [0, 0, 0, 2, 2, 2, 3, 3, 3, 0, 0, 0, ],
+            [0, 0, 2, 2, 2, 2, 3, 3, 3, 3, 0, 0, ],
+            [0, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 0, ], ]
+
 ladder = [[0, 2, 1, 0, 0, 0, 0, 0, 0, 1, 2, 0, ],
           [0, 2, 1, 0, 0, 0, 0, 0, 0, 1, 2, 0, ],
           [0, 2, 1, 0, 0, 0, 0, 0, 0, 1, 2, 0, ],
@@ -48,79 +60,150 @@ line = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ], ]
 
-dummy = [[0, 0, 0, 0, 0, 0, 0, 0, 0, ],
-         [0, 1, 1, 1, 1, 1, 1, 1, 0, ],
-         [0, 1, 0, 0, 0, 0, 0, 1, 0, ],
-         [0, 1, 0, 0, 0, 0, 0, 1, 0, ],
-         [0, 1, 0, 0, 0, 0, 0, 1, 0, ],
-         [0, 1, 0, 0, 0, 0, 0, 1, 0, ],
-         [0, 1, 0, 0, 0, 0, 0, 1, 0, ],
-         [0, 1, 0, 0, 0, 0, 0, 1, 0, ],
-         [0, 1, 0, 0, 0, 0, 0, 1, 0, ],
-         [0, 1, 1, 1, 1, 1, 1, 1, 0, ],
-         [0, 0, 0, 0, 0, 0, 0, 0, 0, ], ]
+dummy = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+         [0, 0, 1, 1, 1, 1, 1, 1, 1, 0, ],
+         [0, 0, 1, 0, 0, 0, 0, 0, 1, 0, ],
+         [0, 0, 1, 0, 0, 0, 0, 0, 1, 0, ],
+         [0, 0, 1, 0, 0, 0, 0, 0, 1, 0, ],
+         [0, 0, 1, 0, 0, 0, 0, 0, 1, 0, ],
+         [0, 0, 1, 0, 0, 0, 0, 0, 1, 0, ],
+         [0, 0, 1, 0, 0, 0, 0, 0, 1, 0, ],
+         [0, 0, 1, 0, 0, 0, 0, 0, 1, 0, ],
+         [0, 0, 1, 1, 1, 1, 1, 1, 1, 0, ],
+         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ], ]
 
-miner1 = [[0, 0, 0, 2, 0, 0, 0, 0, 0, ],
-          [0, 0, 1, 1, 2, 0, 0, 0, 0, ],
-          [0, 0, 1, 1, 1, 0, 0, 0, 0, ],
-          [0, 0, 0, 2, 1, 2, 0, 0, 0, ],
-          [0, 0, 2, 2, 2, 2, 2, 2, 0, ],
-          [1, 2, 0, 0, 2, 2, 0, 2, 1, ],
+miner1 = [[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, ],
+          [0, 0, 0, 0, 1, 1, 2, 0, 0, 0, 0, ],
+          [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, ],
+          [0, 0, 0, 0, 0, 2, 1, 2, 0, 0, 0, ],
+          [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 0, ],
+          [0, 0, 1, 2, 0, 0, 2, 2, 0, 2, 1, ],
+          [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, ],
+          [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, ],
+          [0, 0, 0, 0, 1, 1, 0, 1, 1, 2, 2, ],
+          [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, ],
+          [0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, ], ]
+
+miner2 = [[0, 0, 0, 0, 0, 2, 0, 0, 0, ],
+          [0, 0, 0, 0, 1, 1, 2, 0, 0, ],
+          [0, 0, 0, 0, 1, 1, 1, 0, 0, ],
+          [0, 0, 0, 0, 0, 2, 2, 2, 0, ],
+          [0, 0, 0, 0, 2, 2, 2, 2, 2, ],
+          [0, 0, 1, 2, 2, 1, 1, 2, 2, ],
+          [0, 0, 0, 0, 1, 1, 1, 0, 0, ],
+          [0, 0, 0, 0, 0, 1, 1, 0, 0, ],
+          [0, 0, 0, 0, 0, 1, 1, 0, 0, ],
+          [0, 0, 0, 0, 0, 1, 1, 2, 0, ],
+          [0, 0, 0, 0, 0, 2, 2, 0, 0, ], ]
+
+miner3 = [[0, 0, 0, 0, 2, 0, 0, 0, 0, ],
+          [0, 0, 0, 1, 1, 2, 0, 0, 0, ],
+          [0, 0, 0, 1, 1, 1, 0, 0, 0, ],
           [0, 0, 0, 0, 1, 1, 0, 0, 0, ],
-          [0, 0, 0, 1, 0, 1, 0, 0, 0, ],
-          [0, 0, 1, 1, 0, 1, 1, 2, 2, ],
-          [0, 0, 1, 1, 0, 0, 0, 0, 0, ],
-          [0, 0, 2, 2, 0, 0, 0, 0, 0, ], ]
+          [0, 0, 1, 0, 2, 2, 2, 2, 0, ],
+          [0, 0, 2, 2, 2, 2, 0, 2, 1, ],
+          [0, 0, 0, 0, 2, 2, 0, 0, 0, ],
+          [0, 0, 0, 1, 1, 1, 1, 0, 0, ],
+          [0, 0, 1, 1, 0, 0, 1, 1, 0, ],
+          [0, 0, 2, 2, 0, 0, 0, 1, 0, ],
+          [0, 0, 0, 0, 0, 0, 0, 2, 2, ], ]
 
-miner2 = [[0, 0, 0, 2, 0, 0, 0, ],
-          [0, 0, 1, 1, 2, 0, 0, ],
-          [0, 0, 1, 1, 1, 0, 0, ],
-          [0, 0, 0, 2, 2, 2, 0, ],
-          [0, 0, 2, 2, 2, 2, 2, ],
-          [1, 2, 2, 1, 1, 2, 2, ],
-          [0, 0, 1, 1, 1, 0, 0, ],
-          [0, 0, 0, 1, 1, 0, 0, ],
-          [0, 0, 0, 1, 1, 0, 0, ],
-          [0, 0, 0, 1, 1, 2, 0, ],
-          [0, 0, 0, 2, 2, 0, 0, ], ]
-
-miner3 = [[0, 0, 2, 0, 0, 0, 0, ],
-          [0, 1, 1, 2, 0, 0, 0, ],
-          [0, 1, 1, 1, 0, 0, 0, ],
-          [0, 0, 1, 1, 0, 0, 0, ],
-          [1, 0, 2, 2, 2, 2, 0, ],
-          [2, 2, 2, 2, 0, 2, 1, ],
-          [0, 0, 2, 2, 0, 0, 0, ],
-          [0, 1, 1, 1, 1, 0, 0, ],
-          [1, 1, 0, 0, 1, 1, 0, ],
-          [2, 2, 0, 0, 0, 1, 0, ],
-          [0, 0, 0, 0, 0, 2, 2, ], ]
-
-miner4 = [[0, 0, 0, 2, 0, 0, 0, ],
-          [0, 0, 1, 1, 2, 0, 0, ],
-          [0, 0, 1, 1, 1, 0, 0, ],
-          [0, 0, 0, 1, 1, 0, 0, ],
-          [0, 0, 0, 2, 2, 2, 0, ],
-          [0, 0, 2, 2, 2, 2, 2, ],
-          [1, 2, 2, 2, 1, 2, 2, ],
-          [0, 0, 0, 1, 1, 1, 0, ],
-          [0, 0, 1, 1, 0, 1, 0, ],
-          [0, 0, 1, 1, 0, 1, 1, ],
-          [0, 0, 2, 2, 0, 2, 2, ], ]
+miner4 = [[0, 0, 0, 0, 0, 2, 0, 0, 0, ],
+          [0, 0, 0, 0, 1, 1, 2, 0, 0, ],
+          [0, 0, 0, 0, 1, 1, 1, 0, 0, ],
+          [0, 0, 0, 0, 0, 1, 1, 0, 0, ],
+          [0, 0, 0, 0, 0, 2, 2, 2, 0, ],
+          [0, 0, 0, 0, 2, 2, 2, 2, 2, ],
+          [0, 0, 1, 2, 2, 2, 1, 2, 2, ],
+          [0, 0, 0, 0, 0, 1, 1, 1, 0, ],
+          [0, 0, 0, 0, 1, 1, 0, 1, 0, ],
+          [0, 0, 0, 0, 1, 1, 0, 1, 1, ],
+          [0, 0, 0, 0, 2, 2, 0, 2, 2, ], ]
 
 
-miner5 = [[2, 0, 0, 2, 0, 0, 0, 2, ],
-          [2, 0, 2, 1, 2, 0, 0, 2, ],
-          [2, 0, 1, 1, 1, 0, 0, 2, ],
-          [2, 2, 1, 2, 2, 1, 2, 2, ],
-          [0, 2, 2, 2, 2, 2, 2, 0, ],
-          [0, 0, 0, 2, 2, 0, 0, 0, ],
-          [0, 0, 0, 1, 1, 0, 0, 0, ],
-          [0, 0, 1, 1, 1, 0, 0, 0, ],
-          [0, 1, 1, 1, 1, 1, 1, 0, ],
-          [0, 1, 1, 0, 1, 1, 0, 0, ],
-          [0, 2, 2, 0, 2, 2, 0, 0, ], ]
+miner5 = [[0, 0, 2, 0, 0, 2, 0, 0, 0, 2, ],
+          [0, 0, 2, 0, 2, 1, 2, 0, 0, 2, ],
+          [0, 0, 2, 0, 1, 1, 1, 0, 0, 2, ],
+          [0, 0, 2, 2, 1, 2, 2, 1, 2, 2, ],
+          [0, 0, 0, 2, 2, 2, 2, 2, 2, 0, ],
+          [0, 0, 0, 0, 0, 2, 2, 0, 0, 0, ],
+          [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, ],
+          [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, ],
+          [0, 0, 0, 1, 1, 1, 1, 1, 0, 0, ],
+          [0, 0, 0, 1, 1, 0, 1, 1, 0, 0, ],
+          [0, 0, 0, 2, 2, 0, 2, 2, 0, 0, ], ]
 
+miner6 = [[0, 0, 2, 0, 0, 2, 0, 0, 0, 2, ],       
+          [0, 0, 2, 0, 2, 1, 2, 0, 0, 2, ],       
+          [0, 0, 2, 0, 1, 1, 1, 0, 0, 2, ],       
+          [0, 0, 2, 2, 1, 2, 2, 1, 2, 2, ],
+          [0, 0, 0, 2, 2, 2, 2, 2, 2, 0, ],
+          [0, 0, 0, 0, 2, 2, 0, 0, 0, 0, ],       
+          [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, ],
+          [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, ],
+          [0, 0, 0, 1, 1, 1, 1, 0, 0, 0, ],
+          [0, 0, 1, 1, 0, 1, 1, 0, 0, 0, ],
+          [0, 0, 2, 2, 0, 2, 2, 0, 0, 0, ], ]
+
+miner7 = [[0, 0, 0, 2, 0, 2, 0, 0, 2, 0, ],
+          [0, 0, 0, 2, 2, 1, 2, 0, 2, 0, ],       
+          [0, 0, 0, 2, 1, 1, 1, 0, 2, 0, ],       
+          [0, 0, 0, 2, 1, 2, 2, 2, 2, 0, ], 
+          [0, 0, 0, 0, 2, 2, 2, 2, 0, 0, ], 
+          [0, 0, 0, 0, 2, 2, 0, 0, 0, 0, ],       
+          [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, ], 
+          [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, ], 
+          [0, 0, 0, 1, 1, 1, 1, 0, 0, 0, ], 
+          [0, 0, 1, 1, 0, 1, 1, 0, 0, 0, ], 
+          [0, 0, 2, 2, 0, 2, 2, 0, 0, 0, ], ]
+
+miner8 = [[0, 0, 0, 0, 2, 2, 0, 2, 0, 0, ],
+          [0, 0, 0, 0, 2, 1, 2, 2, 0, 0, ],
+          [0, 0, 0, 0, 2, 1, 1, 2, 0, 0, ],
+          [0, 0, 0, 0, 2, 2, 2, 2, 0, 0, ],
+          [0, 0, 0, 0, 2, 2, 2, 0, 0, 0, ],
+          [0, 0, 0, 0, 2, 2, 0, 0, 0, 0, ],
+          [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, ],
+          [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, ],
+          [0, 0, 0, 1, 1, 1, 1, 0, 0, 0, ],
+          [0, 0, 1, 1, 0, 1, 1, 0, 0, 0, ],
+          [0, 0, 2, 2, 0, 2, 2, 0, 0, 0, ], ]
+
+miner9 = [[0, 0, 0, 0, 0, 2, 0, 0, 0, 2, ],
+          [0, 0, 0, 0, 2, 1, 2, 0, 0, 2, ], 
+          [0, 0, 2, 0, 1, 1, 1, 0, 0, 2, ], 
+          [0, 0, 2, 2, 1, 2, 2, 1, 2, 2, ], 
+          [0, 0, 2, 2, 2, 2, 2, 2, 2, 0, ], 
+          [0, 0, 0, 0, 0, 2, 2, 0, 0, 0, ], 
+          [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, ], 
+          [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, ], 
+          [0, 0, 0, 1, 1, 0, 2, 2, 0, 0, ], 
+          [0, 0, 0, 1, 1, 0, 0, 0, 0, 0, ], 
+          [0, 0, 0, 2, 2, 0, 0, 0, 0, 0, ], ]
+
+miner10 = [[0, 0, 2, 0, 0, 2, 0, 0, 0, 0, ],
+           [0, 0, 2, 0, 2, 1, 2, 0, 0, 0, ], 
+           [0, 0, 2, 0, 1, 1, 1, 0, 0, 2, ], 
+           [0, 0, 2, 2, 1, 2, 2, 1, 2, 2, ], 
+           [0, 0, 0, 2, 2, 2, 2, 2, 2, 0, ], 
+           [0, 0, 0, 0, 0, 2, 2, 0, 0, 0, ], 
+           [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, ], 
+           [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, ], 
+           [0, 0, 0, 2, 2, 1, 1, 1, 0, 0, ], 
+           [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, ], 
+           [0, 0, 0, 0, 0, 0, 2, 2, 0, 0, ], ]
+
+miner11 = [[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, ], 
+           [0, 0, 0, 0, 2, 1, 2, 0, 0, 0, ], 
+           [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, ], 
+           [0, 0, 0, 2, 1, 2, 2, 1, 2, 0, ], 
+           [0, 0, 2, 2, 2, 2, 2, 2, 2, 2, ], 
+           [0, 0, 2, 0, 0, 2, 2, 0, 0, 2, ], 
+           [0, 0, 2, 0, 0, 1, 1, 0, 0, 2, ], 
+           [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, ], 
+           [0, 0, 0, 1, 1, 1, 1, 1, 0, 0, ], 
+           [0, 0, 0, 1, 1, 0, 1, 1, 0, 0, ], 
+           [0, 0, 0, 2, 2, 0, 2, 2, 0, 0, ], ]
 
 def _init_surface(pattern, colors, scale, flip):
     height = len(pattern)
@@ -152,7 +235,6 @@ class Sprite(pygame.sprite.Sprite):
         self.scale = scale
 
         self.rect = pos
-        # self.pos = pos
 
 
 class Miner:
@@ -160,7 +242,7 @@ class Miner:
         self.sprites = sprites
         self.sprite_dir = 0
         self.sprite_id = 0
-        self.sprite = self.sprites[LodeRunner.SPRITE_STAND][self.sprite_dir][self.sprite_id]
+        self.sprite = self.sprites[LodeRunner.SPRITE_WALK][self.sprite_dir][self.sprite_id]
         self.group = group
 
         self.hang = False
@@ -175,6 +257,11 @@ class Miner:
 
         self.sprite.add(self.group)
 
+    def _pos2tilepos(self, pos):
+        x, y = pos
+        tile_width, tile_height = self.tile_size
+        return x // tile_width, y // tile_height
+
     def _get_tiles(self, pos):
         x, y = pos
 
@@ -183,9 +270,10 @@ class Miner:
 
         tiles = []
         for dx, dy in (0, 0), (width-1, 0), (width-1, height-1), (0, height-1):
-            tiles.append(((x + dx) // tile_width, (y + dy) // tile_height))
+            tiles.append(self._pos2tilepos((x + dx, y + dy)))
+        off_x = x - (tiles[0][0]*tile_width)
         off_y = y - (tiles[0][1]*tile_height)
-        return off_y, tiles
+        return (off_x, off_y), tiles
 
     def _check_hit_solid(self, tile_attrs, screen_size, pos, direction, mask):
         dir_ids = LodeRunner.DIR_CHECKS[direction]
@@ -212,32 +300,23 @@ class Miner:
     def _check_fall(self, tile_attrs, screen_size):
         x, y = self.pos
 
-        off_y, tiles = self._get_tiles((x, y))
+        (off_x, off_y), tiles = self._get_tiles((x, y))
 
         self.hang = False
         if off_y == 0:
             for i in [0, 1]:
                 tx, ty = tiles[i]
                 if tile_attrs[tx][ty] & LodeRunner.MASK_HANG:
-                    print("m2", tx, ty)
                     self.hang = True
 
-        self.stand = False
-        for i in [2, 3]:
-            tx, ty = tiles[i]
-            tx, ty, solid = self._check_hit_solid(tile_attrs, screen_size, (x, y), LodeRunner.DIR_DOWN,
-                                                  LodeRunner.MASK_SOLID | LodeRunner.MASK_STAND)
-            if solid:
-                self.stand = True
-
-        print("m1", x, y, self.stand, self.hang)
-
+        _, _, self.stand = self._check_hit_solid(tile_attrs, screen_size, (x, y+1), LodeRunner.DIR_DOWN,
+                                                 LodeRunner.MASK_SOLID | LodeRunner.MASK_STAND)
         return not self.hang and not self.stand
 
     def _check_climb(self, tile_attrs):
         x, y = self.pos
 
-        off_y, tiles = self._get_tiles((x, y))
+        (off_x, off_y), tiles = self._get_tiles((x, y))
 
         for i in [0, 1, 2, 3]:
             tx, ty = tiles[i]
@@ -247,13 +326,17 @@ class Miner:
 
         return False
 
-    def move(self, tile_attrs, screen_size, direction):
+    def move(self, lr_game, screen_size, direction):
         x, y = self.pos
+        tile_attrs = lr_game.tile_attrs
 
-        if self._check_fall(tile_attrs, screen_size):
+        fall = self._check_fall(tile_attrs, screen_size)
+        if fall:
             direction = LodeRunner.DIR_DOWN
 
-        off_y, tiles = self._get_tiles((x, y))
+        (off_x, off_y), tiles = self._get_tiles((x, y))
+        if off_x or off_y:
+            direction = self.sprite_dir
 
         if direction == LodeRunner.DIR_UP:
             if not self._check_climb(tile_attrs):
@@ -278,30 +361,38 @@ class Miner:
 
         self.sprite_dir = direction
 
-        tx, ty, solid = self._check_hit_solid(tile_attrs, screen_size, (x, y), direction, LodeRunner.MASK_SOLID)
+        nx, ny, solid = self._check_hit_solid(tile_attrs, screen_size, (x, y), direction, LodeRunner.MASK_SOLID)
         if solid:
             return
 
         if self.stand or not self.hang:
-            sprite_type = LodeRunner.SPRITE_STAND
+            sprite_type = LodeRunner.SPRITE_WALK if (direction in [LodeRunner.DIR_LEFT, LodeRunner.DIR_RIGHT, LodeRunner.DIR_NONE]) else LodeRunner.SPRITE_CLIMB
         else:
             sprite_type = LodeRunner.SPRITE_HANG
 
-        sprite_dir = self.sprite_dir if self.sprite_dir < LodeRunner.DIR_NONE else LodeRunner.DIR_DOWN
+        sprite_dir = LodeRunner.DIR_NONE if fall else self.sprite_dir
 
         sprites = self.sprites[sprite_type]
 
-        self.sprite_id += 1
+        self.sprite.kill()
+        if self.pos != (nx, ny):
+            self.sprite_id += 1
         if self.sprite_id // 8 >= len(sprites[sprite_dir]):
             self.sprite_id = 0
 
-        self.sprite.kill()
         self.sprite = sprites[sprite_dir][self.sprite_id // 8]
         self.sprite.add(self.group)
 
-        self.pos = tx, ty
-        self.sprite.rect = tx * self.scale, ty * self.scale
+        self.pos = nx, ny
+        self.sprite.rect = nx * self.scale, ny * self.scale
 
+        (off_x, off_y), tiles = self._get_tiles((x, y))
+        dir_ids = [0, 1, 2, 3]
+        for i in dir_ids:
+            tx, ty = tiles[i]
+            if tile_attrs[tx][ty] & LodeRunner.MASK_GOLD:
+                lr_game._replace_tile(tx, ty, 0)
+                tile_attrs[tx][ty] &= ~LodeRunner.MASK_GOLD
 
 class LodeRunner:
     right_arrow = [(-50, -25), (0, -25), (0, -50), (50, 0), (0, 50), (0, 25), (-50, 25)]
@@ -317,17 +408,22 @@ class LodeRunner:
     MASK_STAND = 2
     MASK_HANG = 4
     MASK_CLIMB = 8
+    MASK_GOLD = 16
 
-    SPRITE_STAND = 0
-    SPRITE_HANG = 1
+    SPRITE_WALK = 0
+    SPRITE_CLIMB = 1
+    SPRITE_HANG = 2
 
-    # DIR_CHECKS=[([],0), ([1,2],MASK_RIGHT),([0,1],MASK_UP),([0,3],MASK_LEFT),([2,3],MASK_DOWN)]
-    DIR_CHECKS = [[], [1, 2], [0, 1], [0, 3], [2, 3]]
+    DIR_CHECKS = [[1, 2], [0, 1], [0, 3], [2, 3], []]
 
     TIMER_REFRESH = 0
 
+    def _draw_tile(self, surface, x, y, tile_id):
+        tile_width, tile_height = self.tile_size
+        pygame.Surface.blit(surface, self.tiles[tile_id], (x*tile_width*self.scale, y*tile_height*self.scale))
+
     def _draw_screen(self, screen, scale):
-        # self.width, self.height = screen['size']
+        self.scale = scale
         self.size = screen['size']
         self.colors = screen['colors']
         self.tile_size = screen['tile_size']
@@ -344,11 +440,15 @@ class LodeRunner:
         for y in range(0, height):
             for x in range(0, width):
                 tile_id = self.layout[y][x]
-                pygame.Surface.blit(surface, self.tiles[tile_id], (x*tile_width*scale, y*tile_height*scale))
+                self._draw_tile(surface, x, y, tile_id)
                 _, attrs = screen['tiles'][tile_id]
                 self.tile_attrs[x][y] = attrs
 
         return surface
+
+    def _replace_tile(self, x, y, tile_id):
+        self._draw_tile(self.background, x, y, tile_id)
+        self._draw_tile(self.display, x, y, tile_id)
 
     def __init__(self):
         self.background = self._draw_screen(screen1, 3)
@@ -360,17 +460,24 @@ class LodeRunner:
         colors = [(0, 0, 0, 0), (255, 101, 0, 255), (255, 255, 99, 255)]
 
         self.miner_sprites = []
-        for _ in [self.SPRITE_STAND, self.SPRITE_HANG]:
+        for _ in [self.SPRITE_WALK, self.SPRITE_CLIMB, self.SPRITE_HANG]:
             self.miner_sprites.append([])
 
-        for sprite_type, flip, sprites, in [(self.SPRITE_STAND, True, [miner3, miner2, miner1]),
-                                            (self.SPRITE_STAND, False, [miner5]),
-                                            (self.SPRITE_STAND, False, [miner1, miner2, miner3]),
-                                            (self.SPRITE_STAND, False, [miner5]),
-                                            (self.SPRITE_HANG, False, [dummy]),
-                                            (self.SPRITE_HANG, False, [dummy]),
-                                            (self.SPRITE_HANG, False, [dummy]),
-                                            (self.SPRITE_HANG, False, [dummy]),
+        for sprite_type, flip, sprites, in [(self.SPRITE_WALK, True, [miner3, miner2, miner1]),
+                                            (self.SPRITE_WALK, False, [dummy]),
+                                            (self.SPRITE_WALK, False, [miner1, miner2, miner3]),
+                                            (self.SPRITE_WALK, False, [dummy]),
+                                            (self.SPRITE_WALK, False, [miner11]),
+                                            (self.SPRITE_CLIMB, False, [dummy]),
+                                            (self.SPRITE_CLIMB, False, [miner9, miner10]),
+                                            (self.SPRITE_CLIMB, False, [dummy]),
+                                            (self.SPRITE_CLIMB, False, [miner9, miner10]),
+                                            (self.SPRITE_CLIMB, False, [miner5]),
+                                            (self.SPRITE_HANG, False, [miner6, miner8]),
+                                            (self.SPRITE_HANG, False, [miner5]),
+                                            (self.SPRITE_HANG, True, [miner6, miner8]),
+                                            (self.SPRITE_HANG, False, [miner5]),
+                                            (self.SPRITE_HANG, False, [miner5]),
                                             ]:
             sprites = [Sprite(i, colors, (8, 11), self.tile_size, 3, (80, 0), flip) for i in sprites]
             self.miner_sprites[sprite_type].append(sprites)
@@ -394,11 +501,13 @@ class LodeRunner:
             self.group.draw(self.display)
             event = pygame.event.wait()
             if event.type == self.TIMER_REFRESH:
-                self.miner.move(self.tile_attrs, self.size, direction)
+                self.miner.move(self, self.size, direction)
                 pygame.display.update()
             if event.type == pygame.KEYDOWN:
                 if event.key in key_map:
                     direction = key_map[event.key]
+            if event.type == pygame.KEYUP:
+                    direction = LodeRunner.DIR_NONE
             if event.type == pygame.QUIT:
                 game_over = True
 
@@ -406,24 +515,25 @@ class LodeRunner:
 screen1 = {'tiles': [(nothing, 0),
                      (bricks, LodeRunner.MASK_SOLID),
                      (ladder, LodeRunner.MASK_STAND | LodeRunner.MASK_CLIMB),
-                     (line, LodeRunner.MASK_HANG)
+                     (line, LodeRunner.MASK_HANG),
+                     (goldpile, LodeRunner.MASK_GOLD),
                      ],
-           'colors': [(0, 0, 0, 255), (99, 0, 0, 255), (255, 101, 0, 255)],
+           'colors': [(0, 0, 0, 255), (99, 0, 0, 255), (255, 101, 0, 255), (255, 255, 99, 255)],
            'size': (26, 16),
            'tile_size': (12, 11),
            'layout': [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
-                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+                      [0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
                       [1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
-                      [0, 0, 0, 0, 0, 0, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+                      [0, 0, 0, 0, 0, 0, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 4, 0, 0, 0, ],
                       [0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 1, 1, ],
                       [0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, ],
-                      [0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, ],
+                      [0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 4, 0, 2, 0, 0, ],
                       [1, 1, 2, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, ],
                       [0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, ],
                       [0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, ],
                       [1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, ],
                       [0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, ],
-                      [0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 0, 0, 0, 0, 0, 0, ],
+                      [0, 0, 0, 0, 0, 0, 4, 0, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 0, 0, 4, 0, 0, 0, ],
                       [0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, ],
                       [0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, ],
                       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ],
