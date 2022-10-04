@@ -219,10 +219,12 @@ def _init_surface(pattern, colors, scale, flip):
     if flip:
         surface = pygame.transform.flip(surface, flip, False)
 
+    print("mx", surface)
+
     return pygame.transform.scale(surface, (scale*width, scale*height))
 
 
-class Sprite(pygame.sprite.Sprite):
+class _Sprite(pygame.sprite.Sprite):
     def __init__(self, pattern, colors, size, tile_size, scale, pos, flip):
         # Call the parent class (Sprite) constructor
         pygame.sprite.Sprite.__init__(self)
@@ -231,18 +233,20 @@ class Sprite(pygame.sprite.Sprite):
         # This could also be an image loaded from the disk.
         self.image = _init_surface(pattern, colors, scale, flip)
         self.size = size
-        self.tile_size = tile_size
         self.scale = scale
 
         self.rect = pos
 
 
 class Miner:
-    def __init__(self, sprites, size, tile_size, scale, pos, group):
-        self.sprites = sprites
+    def __init__(self, sprite_images, size, tile_size, scale, pos, group):
+        self.sprite_images = sprite_images
+        # print("m0", sprite_images)
         self.sprite_dir = 0
         self.sprite_id = 0
-        self.sprite = self.sprites[LodeRunner.SPRITE_WALK][self.sprite_dir][self.sprite_id]
+        self.sprite = pygame.sprite.Sprite()
+        self.sprite.image = self.sprite_images[LodeRunner.SPRITE_WALK][self.sprite_dir][self.sprite_id]
+        print("m1", type(self.sprite.image), self.sprite.image)
         self.group = group
 
         self.hang = False
@@ -336,7 +340,8 @@ class Miner:
 
         (off_x, off_y), tiles = self._get_tiles((x, y))
         if off_x or off_y:
-            direction = self.sprite_dir
+            if direction != self.sprite_dir ^ 2:
+                direction = self.sprite_dir
 
         if direction == LodeRunner.DIR_UP:
             if not self._check_climb(tile_attrs):
@@ -372,18 +377,18 @@ class Miner:
 
         sprite_dir = LodeRunner.DIR_NONE if fall else self.sprite_dir
 
-        sprites = self.sprites[sprite_type]
+        images = self.sprite_images[sprite_type]
 
         self.sprite.kill()
         if self.pos != (nx, ny):
             self.sprite_id += 1
-        if self.sprite_id // 8 >= len(sprites[sprite_dir]):
+        if self.sprite_id // 8 >= len(images[sprite_dir]):
             self.sprite_id = 0
 
-        self.sprite = sprites[sprite_dir][self.sprite_id // 8]
-        self.sprite.add(self.group)
-
         self.pos = nx, ny
+
+        self.sprite.image = images[sprite_dir][self.sprite_id // 8]
+        self.sprite.add(self.group)
         self.sprite.rect = nx * self.scale, ny * self.scale
 
         (off_x, off_y), tiles = self._get_tiles((x, y))
@@ -393,6 +398,10 @@ class Miner:
             if tile_attrs[tx][ty] & LodeRunner.MASK_GOLD:
                 lr_game._replace_tile(tx, ty, 0)
                 tile_attrs[tx][ty] &= ~LodeRunner.MASK_GOLD
+
+class MinerEnemy(Miner):
+    def __init__(self, sprites, size, tile_size, scale, pos, group):
+        super().__init__(sprites, size, tile_size, scale, pos, group)
 
 class LodeRunner:
     right_arrow = [(-50, -25), (0, -25), (0, -50), (50, 0), (0, 50), (0, 25), (-50, 25)]
@@ -459,9 +468,9 @@ class LodeRunner:
 
         colors = [(0, 0, 0, 0), (255, 101, 0, 255), (255, 255, 99, 255)]
 
-        self.miner_sprites = []
+        self.miner_images = []
         for _ in [self.SPRITE_WALK, self.SPRITE_CLIMB, self.SPRITE_HANG]:
-            self.miner_sprites.append([])
+            self.miner_images.append([])
 
         for sprite_type, flip, sprites, in [(self.SPRITE_WALK, True, [miner3, miner2, miner1]),
                                             (self.SPRITE_WALK, False, [dummy]),
@@ -479,11 +488,13 @@ class LodeRunner:
                                             (self.SPRITE_HANG, False, [miner5]),
                                             (self.SPRITE_HANG, False, [miner5]),
                                             ]:
-            sprites = [Sprite(i, colors, (8, 11), self.tile_size, 3, (80, 0), flip) for i in sprites]
-            self.miner_sprites[sprite_type].append(sprites)
+            images = [_init_surface(i, colors, 3, flip) for i in sprites]
+            print("m2", type(images), type(images[0]))
+            self.miner_images[sprite_type].append(images)
 
         self.group = pygame.sprite.Group()
-        self.miner = Miner(self.miner_sprites, (8, 11), self.tile_size, 3, (80, 0), self.group)
+        self.miner = Miner(self.miner_images, (8, 11), self.tile_size, 3, (80, 0), self.group)
+        self.enemy = MinerEnemy(self.miner_images, (8, 11), self.tile_size, 3, (40, 0), self.group)
 
     def mainloop(self):
         key_map = {pygame.K_RIGHT: self.DIR_RIGHT,
@@ -502,6 +513,7 @@ class LodeRunner:
             event = pygame.event.wait()
             if event.type == self.TIMER_REFRESH:
                 self.miner.move(self, self.size, direction)
+                self.enemy.move(self, self.size, LodeRunner.DIR_NONE)
                 pygame.display.update()
             if event.type == pygame.KEYDOWN:
                 if event.key in key_map:
