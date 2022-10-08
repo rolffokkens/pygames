@@ -229,12 +229,14 @@ def _init_surface(pattern, colors, scale, flip, clip):
         r_margin = 0
         l_margin = 0
 
+    width -= l_margin + r_margin
+
     surface = pygame.Surface((width, height), pygame.SRCALPHA)
     pix_array = pygame.PixelArray(surface)
 
     for y in range(0, height):
-        for x in range(l_margin, width - r_margin):
-            pix_array[x, y] = colors[pattern[y][x]]
+        for x in range(0, width):
+            pix_array[x, y] = colors[pattern[y][x + l_margin]]
 
     if flip:
         surface = pygame.transform.flip(surface, flip, False)
@@ -258,10 +260,11 @@ class MinerBase:
 
         self.sprite.image = image
         self.sprite.rect = image.get_rect()
-        self.sprite.rect.x = x + x_off * self.scale
+
+        self.sprite.rect.x = (x + x_off) * self.scale
         self.sprite.rect.y = y * self.scale
 
-    def __init__(self, sprite_images, size, tile_size, scale, tpos, group, speed):
+    def __init__(self, sprite_images, size, tile_size, scale, tile_pos, group, speed):
         self.sprite_images = sprite_images
         self.sprite_dir = 0
         self.sprite_id = 0
@@ -276,13 +279,13 @@ class MinerBase:
         self.tile_size = tile_size
         self.scale = scale
 
-        pos = self._tilepos2pos(tpos)
+        pos = self._tilepos2pos(tile_pos)
         self._set_sprite_image(pos, LodeRunner.SPRITE_WALK, self.sprite_dir, False)
 
         self.hang = False
         self.stand = False
 
-        self.tpos = tpos
+        self.tile_pos = tile_pos
         self.pos = pos
 
         x, y = pos
@@ -292,8 +295,8 @@ class MinerBase:
 
         self.sprite.add(self.group)
 
-    def _tilepos2pos(self, tpos):
-        x, y = tpos
+    def _tilepos2pos(self, tile_pos):
+        x, y = tile_pos
         tile_width, tile_height = self.tile_size
         return x * tile_width, y * tile_height
 
@@ -421,16 +424,12 @@ class MinerBase:
 
         self._set_sprite_image((nx, ny), sprite_type, sprite_dir, self.pos != (nx, ny))
 
-        old_tpos = self.tpos
+        old_tile_pos = self.tile_pos
 
         self.pos = nx, ny
-        self.tpos = self._pos2tilepos((nx, ny))
+        self.tile_pos = self._pos2tilepos((nx, ny))
 
-        self.sprite.rect = self.sprite.image.get_rect()
-        self.sprite.rect.x = nx * self.scale
-        self.sprite.rect.y = ny * self.scale
-
-        return old_tpos != self.tpos
+        return old_tile_pos != self.tile_pos
 
 
 class MinerPlayer(MinerBase):
@@ -551,7 +550,7 @@ class LodeRunner:
 
     def _find_paths(self):
         black = {}
-        grey = [(LodeRunner.DIR_NONE, self.player.tpos)]
+        grey = [(LodeRunner.DIR_NONE, self.player.tile_pos)]
 
         while grey:
             direction, pos = grey[0]
@@ -659,7 +658,7 @@ class LodeRunner:
                 if self.player.move(self, self.size, direction):
                     self._find_paths()
                 for enemy in self.enemies:
-                    edir = self.paths.get(enemy.tpos, LodeRunner.DIR_NONE)
+                    edir = self.paths.get(enemy.tile_pos, LodeRunner.DIR_NONE)
                     enemy.move(self, self.size, edir)
                     if pygame.sprite.collide_rect(self.player.sprite, enemy.sprite):
                         pygame.time.wait(5000)
