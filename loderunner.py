@@ -270,16 +270,15 @@ class MinerBase:
         self.sprite_id = 0
         self.sprite = pygame.sprite.Sprite()
 
-        # self.sprite.image = self.sprite_images[LodeRunner.SPRITE_WALK][self.sprite_dir][self.sprite_id]
         self.group = group
         self.speed = speed
-        self.speedcnt = 0
+        self.speed_cnt = 0
 
         self.size = size
         self.tile_size = tile_size
         self.scale = scale
 
-        pos = self._tilepos2pos(tile_pos)
+        pos = self._tile_pos2pos(tile_pos)
         self._set_sprite_image(pos, LodeRunner.SPRITE_WALK, self.sprite_dir, False)
 
         self.hang = False
@@ -295,12 +294,12 @@ class MinerBase:
 
         self.sprite.add(self.group)
 
-    def _tilepos2pos(self, tile_pos):
+    def _tile_pos2pos(self, tile_pos):
         x, y = tile_pos
         tile_width, tile_height = self.tile_size
         return x * tile_width, y * tile_height
 
-    def _pos2tilepos(self, pos):
+    def _pos2tile_pos(self, pos):
         x, y = pos
         tile_width, tile_height = self.tile_size
         return x // tile_width, y // tile_height
@@ -312,8 +311,8 @@ class MinerBase:
         tile_width, tile_height = self.tile_size
 
         tiles = []
-        for dx, dy in (0, 0), (width - 1, 0), (width - 1, height - 1), (0, height - 1):
-            tiles.append(self._pos2tilepos((x + dx, y + dy)))
+        for dx, dy in (0, 0), (tile_width - 1, 0), (tile_width - 1, tile_height - 1), (0, tile_height - 1):
+            tiles.append(self._pos2tile_pos((x + dx, y + dy)))
         off_x = x - (tiles[0][0] * tile_width)
         off_y = y - (tiles[0][1] * tile_height)
         return (off_x, off_y), tiles
@@ -327,7 +326,7 @@ class MinerBase:
         x += dx
         y += dy
 
-        off_y, tiles = self._get_tiles((x, y))
+        (off_x, off_y), tiles = self._get_tiles((x, y))
         screen_width, screen_height = screen_size
 
         mask &= ~LodeRunner.MASK_HANG
@@ -370,10 +369,10 @@ class MinerBase:
         return False
 
     def move(self, lr_game, screen_size, direction) -> bool:
-        self.speedcnt += 1
-        if self.speedcnt < self.speed:
+        self.speed_cnt += 1
+        if self.speed_cnt < self.speed:
             return False
-        self.speedcnt = 0
+        self.speed_cnt = 0
 
         x, y = self.pos
         tile_attrs = lr_game.tile_attrs
@@ -427,7 +426,7 @@ class MinerBase:
         old_tile_pos = self.tile_pos
 
         self.pos = nx, ny
-        self.tile_pos = self._pos2tilepos((nx, ny))
+        self.tile_pos = self._pos2tile_pos((nx, ny))
 
         return old_tile_pos != self.tile_pos
 
