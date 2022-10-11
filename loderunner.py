@@ -1,4 +1,5 @@
 import pygame
+from typing import Tuple
 
 nothing = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
@@ -307,7 +308,6 @@ class MinerBase:
     def _get_tiles(self, pos):
         x, y = pos
 
-        width, height = self.size
         tile_width, tile_height = self.tile_size
 
         tiles = []
@@ -326,7 +326,7 @@ class MinerBase:
         x += dx
         y += dy
 
-        (off_x, off_y), tiles = self._get_tiles((x, y))
+        _, tiles = self._get_tiles((x, y))
         screen_width, screen_height = screen_size
 
         mask &= ~LodeRunner.MASK_HANG
@@ -368,10 +368,10 @@ class MinerBase:
 
         return False
 
-    def move(self, lr_game, screen_size, direction) -> bool:
+    def move(self, lr_game, screen_size, direction) -> Tuple[bool, bool]:
         self.speed_cnt += 1
         if self.speed_cnt < self.speed:
-            return False
+            return False, False
         self.speed_cnt = 0
 
         x, y = self.pos
@@ -411,7 +411,7 @@ class MinerBase:
 
         nx, ny, solid = self._check_hit_solid(tile_attrs, screen_size, (x, y), direction, LodeRunner.MASK_SOLID)
         if solid:
-            return False
+            return False, False
 
         if self.stand or not self.hang:
             sprite_type = LodeRunner.SPRITE_WALK if (direction in [LodeRunner.DIR_LEFT, LodeRunner.DIR_RIGHT,
@@ -428,18 +428,18 @@ class MinerBase:
         self.pos = nx, ny
         self.tile_pos = self._pos2tile_pos((nx, ny))
 
-        return old_tile_pos != self.tile_pos
+        return old_tile_pos != self.tile_pos, False
 
 
 class MinerPlayer(MinerBase):
     def __init__(self, sprites, size, tile_size, scale, pos, group, speed):
         super().__init__(sprites, size, tile_size, scale, pos, group, speed)
 
-    def move(self, lr_game, screen_size, direction):
+    def move(self, lr_game, screen_size, direction) -> Tuple[bool, bool]:
         x, y = self.pos
         tile_attrs = lr_game.tile_attrs
 
-        ret = super().move(lr_game, screen_size, direction)
+        tile_change, exit_game = super().move(lr_game, screen_size, direction)
 
         _, tiles = self._get_tiles((x, y))
         dir_ids = [0, 1, 2, 3]
@@ -447,16 +447,19 @@ class MinerPlayer(MinerBase):
             tx, ty = tiles[i]
             if tile_attrs[tx][ty] & LodeRunner.MASK_GOLD:
                 lr_game.replace_tile(tx, ty, 0)
-                tile_attrs[tx][ty] &= ~LodeRunner.MASK_GOLD
+                lr_game.gold_count -= 1
 
-        return ret
+        tx, ty = self.tile_pos
+        print("EXIT" if tile_attrs[tx][ty] & LodeRunner.MASK_EXIT else "-")
+
+        return tile_change, tile_attrs[tx][ty] & LodeRunner.MASK_EXIT != 0
 
 
 class MinerEnemy(MinerBase):
     def __init__(self, sprites, size, tile_size, scale, pos, group, speed):
         super().__init__(sprites, size, tile_size, scale, pos, group, speed)
 
-    def move(self, lr_game, screen_size, direction):
+    def move(self, lr_game, screen_size, direction) -> Tuple[bool, bool]:
         return super().move(lr_game, screen_size, direction)
 
 
@@ -482,6 +485,7 @@ class LodeRunner:
     MASK_HANG = 4
     MASK_CLIMB = 8
     MASK_GOLD = 16
+    MASK_EXIT = 32
 
     SPRITE_WALK = 0
     SPRITE_CLIMB = 1
@@ -562,9 +566,10 @@ class LodeRunner:
                 grey.append((direction, orig))
         self.paths = black
 
-    def _draw_tile(self, surface, x, y, tile_id):
+    def _draw_tile(self, surface, x, y, tile):
         tile_width, tile_height = self.tile_size
-        pygame.Surface.blit(surface, self.tiles[tile_id], (x * tile_width * self.scale, y * tile_height * self.scale))
+        # solid, tile = self.tiles[tile_id]
+        pygame.Surface.blit(surface, tile, (x * tile_width * self.scale, y * tile_height * self.scale))
 
     def _draw_screen(self, screen, scale):
         self.scale = scale
@@ -577,28 +582,46 @@ class LodeRunner:
         self.tiles = []
         for (tile, solid) in screen['tiles']:
             x_off, surface = _init_surface(tile, self.colors, scale, False, False)
-            self.tiles.append(surface)
+            self.tiles.append((surface, solid))
 
         self.layout = screen['layout']
         self.tile_attrs = [[0 for _ in range(0, height)] for _ in range(0, width)]
         surface = pygame.Surface((scale * tile_width * width, scale * tile_height * height))
+        self.gold_count = 0
         for y in range(0, height):
             for x in range(0, width):
                 tile_id = self.layout[y][x]
-                self._draw_tile(surface, x, y, tile_id)
-                _, attrs = screen['tiles'][tile_id]
-                self.tile_attrs[x][y] = attrs
+                tile, solid = self.tiles[tile_id]
+                self._draw_tile(surface, x, y, tile)
+                self.tile_attrs[x][y] = solid
+                if solid & LodeRunner.MASK_GOLD:
+                    self.gold_count += 1
 
         return surface
 
     def replace_tile(self, x, y, tile_id):
-        self._draw_tile(self.background, x, y, tile_id)
-        self._draw_tile(self.display, x, y, tile_id)
+        print("m1")
+        tile, solid = self.tiles[tile_id]
+        self.tile_attrs[x][y] = solid
+        self._draw_tile(self.background, x, y, tile)
+        self._draw_tile(self.display, x, y, tile)
+
+    def _draw_exit_ladder(self):
+        width, height = self.size
+        x = self.exit_ladder['x']
+        top_tile_id = self.exit_ladder['top_tile']
+        rest_tile_id = self.exit_ladder['rest_tile']
+
+        for y in range(0, height):
+            if self.tile_attrs[x][y]:
+                break
+            self.replace_tile(x, y, rest_tile_id if y else top_tile_id)
 
     def __init__(self):
         self.graph = {}
         screen = screen1
         self.background = self._draw_screen(screen, 3)
+        self.exit_ladder = screen['exit_ladder']
 
         self._create_graph()
 
@@ -632,9 +655,10 @@ class LodeRunner:
             self.miner_images[sprite_type].append(images)
 
         self.group = pygame.sprite.Group()
-        self.player = MinerPlayer(self.miner_images, (8, 11), self.tile_size, 3, (4, 0), self.group, 6)
+        self.player = MinerPlayer(self.miner_images, (8, 11), self.tile_size, 3, (4, 0), self.group, 1)
         self.enemies = []
         for (x, y), speed in screen.get('enemies', []):
+            speed = 1
             self.enemies.append(MinerEnemy(self.miner_images, (8, 11), self.tile_size, 3, (x, y), self.group, speed))
 
     def mainloop(self):
@@ -645,17 +669,25 @@ class LodeRunner:
                    }
         pygame.init()
 
-        pygame.time.set_timer(self.TIMER_REFRESH, 5)
+        pygame.time.set_timer(self.TIMER_REFRESH, 20)
         game_over = False
         direction = self.DIR_NONE
         self._find_paths()
+
         while not game_over:
+            if not self.gold_count:
+                self.gold_count = -1
+                self._draw_exit_ladder()
+
             self.group.clear(self.display, self.background)
             self.group.draw(self.display)
             event = pygame.event.wait()
             if event.type == self.TIMER_REFRESH:
-                if self.player.move(self, self.size, direction):
+                tile_change, exit_game = self.player.move(self, self.size, direction)
+                if tile_change:
                     self._find_paths()
+                if exit_game:
+                    game_over = True
                 for enemy in self.enemies:
                     edir = self.paths.get(enemy.tile_pos, LodeRunner.DIR_NONE)
                     enemy.move(self, self.size, edir)
@@ -680,6 +712,7 @@ screen1 = {'tiles': [(nothing, 0),
                      (ladder, LodeRunner.MASK_STAND | LodeRunner.MASK_CLIMB),
                      (line, LodeRunner.MASK_HANG),
                      (gold_pile, LodeRunner.MASK_GOLD),
+                     (ladder, LodeRunner.MASK_STAND | LodeRunner.MASK_CLIMB | LodeRunner.MASK_EXIT),
                      ],
            'colors': [(0, 0, 0, 255), (99, 0, 0, 255), (255, 101, 0, 255), (255, 255, 99, 255)],
            'size': (26, 16),
@@ -702,6 +735,10 @@ screen1 = {'tiles': [(nothing, 0),
                       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ],
                       ],
            'enemies': [((24, 14), 7), ((14, 14), 8)],
+           'exit_ladder': {'x': 20,
+                           'top_tile': 5,
+                           'rest_tile': 2,
+                           }
            }
 
 sg = LodeRunner()
