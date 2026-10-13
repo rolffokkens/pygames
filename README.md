@@ -9,7 +9,8 @@ A small collection of retro games written in Python with
 
 A mini Lode Runner clone. Collect all the gold — once the last gold pile is
 picked up, an exit ladder appears at the right side of the map. Reach it to
-win. Running into an enemy ends the game.
+advance to the next level; clearing the last level wins the game. Running into
+an enemy ends the game.
 
 Run it with:
 
@@ -28,11 +29,12 @@ Options:
 | Option | Description |
 | --- | --- |
 | `--tick-ms N` | Milliseconds between clock ticks (game refresh rate, default 20). Game speed is independent of the tick rate: entities move based on elapsed time, not tick counts. |
+| `--level LEVEL` | Level to start on, 1 to 2 (default 1). |
 
 Example:
 
 ```sh
-python3 loderunner.py --tick-ms 10
+python3 loderunner.py --tick-ms 10 --level 2
 ```
 
 ### Snake (`snake.py`)

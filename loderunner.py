@@ -639,16 +639,22 @@ class LodeRunner:
 
         return miner_images
 
-    def __init__(self):
+    def __init__(self, screens, start_level=0):
+        self.screens = screens
+        self.screen_idx = start_level
+        self.load_screen(screens[start_level])
+
+    def load_screen(self, screen):
         self.gold_count = 0
         self.graph = {}
-        screen = screen1
         self.background = self._draw_screen(screen, 3)
         self.exit_ladder = screen['exit_ladder']
 
         self._create_graph()
 
-        self.display = pygame.display.set_mode(self.background.get_size())
+        size = self.background.get_size()
+        if getattr(self, 'display', None) is None or self.display.get_size() != size:
+            self.display = pygame.display.set_mode(size)
         pygame.display.set_caption('Lode Runner')
         pygame.Surface.blit(self.display, self.background, (0, 0))
 
@@ -661,6 +667,14 @@ class LodeRunner:
         self.enemies = []
         for (x, y), step_ms in screen.get('enemies', []):
             self.enemies.append(MinerEnemy(miner_images, (8, 11), self.tile_size, 3, (x, y), self.group, step_ms))
+
+    def load_next_screen(self):
+        if self.screen_idx + 1 >= len(self.screens):
+            return False
+        self.screen_idx += 1
+        self.load_screen(self.screens[self.screen_idx])
+        self._find_paths()
+        return True
 
     def mainloop(self, tick_ms: int):
         key_map = {pygame.K_RIGHT: self.DIR_RIGHT,
@@ -705,7 +719,9 @@ class LodeRunner:
                     if tile_change:
                         self._find_paths()
                     if exit_game:
-                        game_over = True
+                        # advance to the next level; only truly done after the last one
+                        game_over = not self.load_next_screen()
+                        break
                     for enemy in self.enemies:
                         if game_over:
                             break
@@ -729,13 +745,16 @@ class LodeRunner:
                 game_over = True
 
 
-screen1 = {'tiles': [(nothing, 0),
-                     (bricks, LodeRunner.MASK_SOLID),
-                     (ladder, LodeRunner.MASK_STAND | LodeRunner.MASK_CLIMB),
-                     (line, LodeRunner.MASK_HANG),
-                     (gold_pile, LodeRunner.MASK_GOLD),
-                     (ladder, LodeRunner.MASK_STAND | LodeRunner.MASK_CLIMB | LodeRunner.MASK_EXIT),
-                     ],
+# Tile definitions shared by all levels: (bitmap, solid/behavior mask)
+tiles_def = [(nothing, 0),
+             (bricks, LodeRunner.MASK_SOLID),
+             (ladder, LodeRunner.MASK_STAND | LodeRunner.MASK_CLIMB),
+             (line, LodeRunner.MASK_HANG),
+             (gold_pile, LodeRunner.MASK_GOLD),
+             (ladder, LodeRunner.MASK_STAND | LodeRunner.MASK_CLIMB | LodeRunner.MASK_EXIT),
+             ]
+
+screen1 = {'tiles': tiles_def,
            'colors': [(0, 0, 0, 255), (99, 0, 0, 255), (255, 101, 0, 255), (255, 255, 99, 255)],
            'size': (26, 16),
            'tile_size': (12, 11),
@@ -766,6 +785,46 @@ screen1 = {'tiles': [(nothing, 0),
                            }
            }
 
+# Level 2: '.'=nothing, '#'=bricks, '='=ladder, '-'=rope, 'o'=gold
+screen2_layout_ascii = [
+    "..........................",
+    "..o....o....o....o........",
+    "..###=###..#####=####.##..",
+    "....o=........o.=....o....",
+    "..######=..#####=...###...",
+    "...o....=.......=....o....",
+    "########=########=########",
+    "........=.......=.........",
+    "........=.......=.........",
+    ".....o..=...=...=.o.......",
+    "############=..###########",
+    "............=.............",
+    "............=.............",
+    "............=.............",
+    "............=.............",
+    "##########################",
+]
+char2tile = {'.': 0, '#': 1, '=': 2, '-': 3, 'o': 4}
+
+screen2 = {'tiles': tiles_def,
+           'colors': screen1['colors'],
+           'size': (26, 16),
+           'tile_size': (12, 11),
+           'layout': [[char2tile[c] for c in row] for row in screen2_layout_ascii],
+           'player': ((13, 1), 20),
+           'miner_colors': screen1['miner_colors'],
+           'player_colors': screen1['player_colors'],
+           'enemies': [((6, 14), 24), ((18, 14), 28)],
+           'exit_ladder': {'x': 24,
+                           'top_tile': 5,
+                           'rest_tile': 2,
+                           }
+           }
+
+
+screens = [screen1, screen2]
+
+
 def tick_ms_arg(value):
     try:
         ivalue = int(value)
@@ -776,11 +835,23 @@ def tick_ms_arg(value):
     return ivalue
 
 
+def level_arg(value):
+    try:
+        ivalue = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"'{value}' is not an integer")
+    if not 1 <= ivalue <= len(screens):
+        raise argparse.ArgumentTypeError(f'the level must be between 1 and {len(screens)}')
+    return ivalue
+
+
 parser = argparse.ArgumentParser(description='Start game')
 parser.add_argument('--tick-ms', type=tick_ms_arg, default=20,
                     help='number of milliseconds between clock-ticks, i.e. the refresh rate '
                          '(default: 20)')
+parser.add_argument('--level', type=level_arg, default=1, metavar='LEVEL',
+                    help=f'level to start on, 1 to {len(screens)} (default: 1)')
 
 args = parser.parse_args()
-sg = LodeRunner()
+sg = LodeRunner(screens, args.level - 1)
 sg.mainloop(args.tick_ms)
