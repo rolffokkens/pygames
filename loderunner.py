@@ -613,24 +613,10 @@ class LodeRunner:
             self.replace_tile(x, y, rest_tile_id if y else top_tile_id)
         self._create_graph()
 
-    def __init__(self):
-        self.gold_count = 0
-        self.graph = {}
-        screen = screen1
-        self.background = self._draw_screen(screen, 3)
-        self.exit_ladder = screen['exit_ladder']
-
-        self._create_graph()
-
-        self.display = pygame.display.set_mode(self.background.get_size())
-        pygame.display.set_caption('Lode Runner')
-        pygame.Surface.blit(self.display, self.background, (0, 0))
-
-        colors = [(0, 0, 0, 0), (255, 101, 0, 255), (255, 255, 99, 255)]
-
-        self.miner_images = []
+    def _create_miner_images(self, colors):
+        miner_images = []
         for _ in [self.SPRITE_WALK, self.SPRITE_CLIMB, self.SPRITE_HANG]:
-            self.miner_images.append([])
+            miner_images.append([])
 
         for sprite_type, flip, sprites, in [(self.SPRITE_WALK, True, [miner3, miner2, miner1]),
                                             (self.SPRITE_WALK, False, [dummy]),
@@ -649,15 +635,32 @@ class LodeRunner:
                                             (self.SPRITE_HANG, False, [miner5]),
                                             ]:
             images = [_init_surface(image, colors, 3, flip, True) for image in sprites]
-            self.miner_images[sprite_type].append(images)
+            miner_images[sprite_type].append(images)
+
+        return miner_images
+
+    def __init__(self):
+        self.gold_count = 0
+        self.graph = {}
+        screen = screen1
+        self.background = self._draw_screen(screen, 3)
+        self.exit_ladder = screen['exit_ladder']
+
+        self._create_graph()
+
+        self.display = pygame.display.set_mode(self.background.get_size())
+        pygame.display.set_caption('Lode Runner')
+        pygame.Surface.blit(self.display, self.background, (0, 0))
 
         self.group = pygame.sprite.Group()
         player_pos, player_step_ms = screen['player']
-        self.player = MinerPlayer(self.miner_images, (8, 11), self.tile_size, 3, player_pos, self.group,
+        self.player = MinerPlayer(self._create_miner_images(screen['player_colors']),
+                                  (8, 11), self.tile_size, 3, player_pos, self.group,
                                   player_step_ms)
+        miner_images = self._create_miner_images(screen['miner_colors'])
         self.enemies = []
         for (x, y), step_ms in screen.get('enemies', []):
-            self.enemies.append(MinerEnemy(self.miner_images, (8, 11), self.tile_size, 3, (x, y), self.group, step_ms))
+            self.enemies.append(MinerEnemy(miner_images, (8, 11), self.tile_size, 3, (x, y), self.group, step_ms))
 
     def mainloop(self, tick_ms: int):
         key_map = {pygame.K_RIGHT: self.DIR_RIGHT,
@@ -754,6 +757,8 @@ screen1 = {'tiles': [(nothing, 0),
                       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ],
                       ],
            'player': ((4, 0), 20),
+           'miner_colors': [(0, 0, 0, 0), (255, 101, 0, 255), (255, 255, 99, 255)],
+           'player_colors': [(0, 0, 0, 0), (255, 255, 255, 255), (170, 170, 170, 255)],
            'enemies': [((24, 14), 24), ((14, 14), 28)],
            'exit_ladder': {'x': 20,
                            'top_tile': 5,
