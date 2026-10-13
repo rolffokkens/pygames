@@ -369,10 +369,13 @@ class MinerBase:
 
         return False
 
-    def time_tick(self, tick_ms):
-        self.step_ms_cnt += tick_ms
+    def time_tick(self, elapsed_ms):
+        self.step_ms_cnt += elapsed_ms
 
     def move(self, lr_game, screen_size, direction) -> Tuple[bool, bool, bool]:
+        # Returns (acted, tile_change, exit_game). acted is True whenever
+        # enough time had accumulated for a step, even if the step was
+        # blocked by solid tiles.
         if self.step_ms_cnt < self.step_ms:
             return False, False, False
         self.step_ms_cnt -= self.step_ms
@@ -435,17 +438,14 @@ class MinerBase:
 
 
 class MinerPlayer(MinerBase):
-    def __init__(self, sprites, size, tile_size, scale, pos, group, step_ms):
-        super().__init__(sprites, size, tile_size, scale, pos, group, step_ms)
-
     def move(self, lr_game, screen_size, direction) -> Tuple[bool, bool, bool]:
         x, y = self.pos
         tile_attrs = lr_game.tile_attrs
 
-        moved, tile_change, exit_game = super().move(lr_game, screen_size, direction)
+        acted, tile_change, exit_game = super().move(lr_game, screen_size, direction)
 
-        if not moved:
-            return moved, tile_change, exit_game
+        if not acted:
+            return acted, tile_change, exit_game
 
         _, tiles = self._get_tiles((x, y))
         dir_ids = [0, 1, 2, 3]
@@ -457,15 +457,11 @@ class MinerPlayer(MinerBase):
 
         tx, ty = self.tile_pos
 
-        return moved, tile_change, tile_attrs[tx][ty] & LodeRunner.MASK_EXIT != 0
+        return acted, tile_change, tile_attrs[tx][ty] & LodeRunner.MASK_EXIT != 0
 
 
 class MinerEnemy(MinerBase):
-    def __init__(self, sprites, size, tile_size, scale, pos, group, step_ms):
-        super().__init__(sprites, size, tile_size, scale, pos, group, step_ms)
-
-    def move(self, lr_game, screen_size, direction) -> Tuple[bool, bool, bool]:
-        return super().move(lr_game, screen_size, direction)
+    pass
 
 
 class LodeRunner:
@@ -539,11 +535,6 @@ class LodeRunner:
                         cells[x - 1][y] &= ~LodeRunner.DIRMASK_RIGHT
                     if x < width - 1:
                         cells[x + 1][y] &= ~LodeRunner.DIRMASK_LEFT
-
-        # for y in range(0, height):
-        #     for x in range(0, width):
-        #         print("%x " % cells[x][y], end='')
-        #     print('')
 
         for y in range(0, height):
             for x in range(0, width):
@@ -661,7 +652,9 @@ class LodeRunner:
             self.miner_images[sprite_type].append(images)
 
         self.group = pygame.sprite.Group()
-        self.player = MinerPlayer(self.miner_images, (8, 11), self.tile_size, 3, (4, 0), self.group, 20)
+        player_pos, player_step_ms = screen['player']
+        self.player = MinerPlayer(self.miner_images, (8, 11), self.tile_size, 3, player_pos, self.group,
+                                  player_step_ms)
         self.enemies = []
         for (x, y), step_ms in screen.get('enemies', []):
             self.enemies.append(MinerEnemy(self.miner_images, (8, 11), self.tile_size, 3, (x, y), self.group, step_ms))
@@ -684,32 +677,38 @@ class LodeRunner:
             if not self.gold_count:
                 self.gold_count = -1
                 self._draw_exit_ladder()
+                self._find_paths()
 
             self.group.clear(self.display, self.background)
             self.group.draw(self.display)
             event = pygame.event.wait()
             if event.type == self.TIMER_REFRESH:
                 new_time = pygame.time.get_ticks()
-                tick_ms = new_time - cur_time
+                # Clamp the elapsed time to a few ticks, so that one badly
+                # delayed tick cannot turn into a huge multi-step catch-up
+                # (entities teleporting and passing through each other).
+                elapsed_ms = min(new_time - cur_time, 4 * tick_ms)
                 cur_time = new_time
 
-                self.player.time_tick(tick_ms)
+                self.player.time_tick(elapsed_ms)
                 for enemy in self.enemies:
-                    enemy.time_tick(tick_ms)
+                    enemy.time_tick(elapsed_ms)
                 moving = True
                 while moving and not game_over:
                     moving = False
-                    moved, tile_change, exit_game = self.player.move(self, self.size, direction)
-                    if moved:
+                    acted, tile_change, exit_game = self.player.move(self, self.size, direction)
+                    if acted:
                         moving = True
                     if tile_change:
                         self._find_paths()
                     if exit_game:
                         game_over = True
                     for enemy in self.enemies:
+                        if game_over:
+                            break
                         edir = self.paths.get(enemy.tile_pos, LodeRunner.DIR_NONE)
-                        moved, _, _ = enemy.move(self, self.size, edir)
-                        if moved:
+                        acted, _, _ = enemy.move(self, self.size, edir)
+                        if acted:
                             moving = True
                         if pygame.sprite.collide_rect(self.player.sprite, enemy.sprite):
                             pygame.time.wait(5000)
@@ -754,6 +753,7 @@ screen1 = {'tiles': [(nothing, 0),
                       [0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, ],
                       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ],
                       ],
+           'player': ((4, 0), 20),
            'enemies': [((24, 14), 24), ((14, 14), 28)],
            'exit_ladder': {'x': 20,
                            'top_tile': 5,
@@ -761,11 +761,21 @@ screen1 = {'tiles': [(nothing, 0),
                            }
            }
 
+def tick_ms_arg(value):
+    try:
+        ivalue = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"'{value}' is not an integer")
+    if ivalue < 1:
+        raise argparse.ArgumentTypeError('the tick interval must be at least 1 ms')
+    return ivalue
+
+
 parser = argparse.ArgumentParser(description='Start game')
-parser.add_argument('--tick-ms', type=int,
-                    help='sum the integers (default: find the max)')
+parser.add_argument('--tick-ms', type=tick_ms_arg, default=20,
+                    help='number of milliseconds between clock-ticks, i.e. the refresh rate '
+                         '(default: 20)')
 
 args = parser.parse_args()
-tick_ms = args.tick_ms if args.tick_ms else 20
 sg = LodeRunner()
-sg.mainloop(tick_ms)
+sg.mainloop(args.tick_ms)
