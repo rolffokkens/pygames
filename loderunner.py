@@ -786,22 +786,30 @@ screen1 = {'tiles': tiles_def,
            }
 
 # Level 2: '.'=nothing, '#'=bricks, '='=ladder, '-'=rope, 'o'=gold
+# Four floors plus a bottom level, deliberately asymmetric (rule 3.7):
+# every slab has its own gap rhythm, no two slab rows match, and no
+# feature column mirrors another across the centre. Long ladders (cols 4
+# and 22) span floors 1-4; the floor-3 hole (col 16) drops onto the rope
+# (row 9), which shuffles sideways and drops onto floor 4 at either end.
+# The bottom level has three unevenly spaced escape ladders (cols 2, 12,
+# 21); its single gold pile is the risky reward. Column 24 at row 1 is
+# kept clear as the escape-ladder column.
 screen2_layout_ascii = [
     "..........................",
-    "..o....o....o....o........",
-    "..###=###..#####=####.##..",
-    "....o=........o.=....o....",
-    "..######=..#####=...###...",
-    "...o....=.......=....o....",
-    "########=########=########",
-    "........=.......=.........",
-    "........=.......=.........",
-    ".....o..=...=...=.o.......",
-    "############=..###########",
-    "............=.............",
-    "............=.............",
-    "............=.............",
-    "............=.............",
+    ".o.....................o..",
+    "####=#####=#.###=##.##=###",
+    "....=.....=-----=.....=...",
+    "....=.....=...o.=.....=...",
+    "####=##=###..=####.=##=###",
+    "....=..=.....=.....=..=...",
+    "..o.=..=.....=.....=..=...",
+    "####=##=######=#.#####=###",
+    "....=..=......=-------=...",
+    "....=..=......=.......=o..",
+    "##=#########=####=...=####",
+    "..=.........=....=...=....",
+    "..=.........=....=...=....",
+    "..=.........=..o.=...=....",
     "##########################",
 ]
 char2tile = {'.': 0, '#': 1, '=': 2, '-': 3, 'o': 4}
@@ -811,10 +819,10 @@ screen2 = {'tiles': tiles_def,
            'size': (26, 16),
            'tile_size': (12, 11),
            'layout': [[char2tile[c] for c in row] for row in screen2_layout_ascii],
-           'player': ((13, 1), 20),
+           'player': ((15, 0), 20),  # spawn on row 0: drops into the level, as in level 1
            'miner_colors': screen1['miner_colors'],
            'player_colors': screen1['player_colors'],
-           'enemies': [((6, 14), 24), ((18, 14), 28)],
+           'enemies': [((10, 14), 24), ((16, 14), 28), ((21, 7), 26)],
            'exit_ladder': {'x': 24,
                            'top_tile': 5,
                            'rest_tile': 2,

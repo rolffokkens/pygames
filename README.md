@@ -58,7 +58,8 @@ Controls:
 
 ## Setup
 
-Requirements: Python 3 and [pygame](https://www.pygame.org/).
+Requirements: Python 3 and the packages listed in [requirements.txt](requirements.txt)
+(currently [pygame](https://www.pygame.org/)).
 
 > **Note:** pygame currently ships wheels up to Python 3.12; on newer
 > interpreters (e.g. 3.13/3.14) `pip install pygame` tries to build from
@@ -68,7 +69,7 @@ Requirements: Python 3 and [pygame](https://www.pygame.org/).
 ```sh
 python3.12 -m venv .venv
 source .venv/bin/activate
-pip install pygame
+pip install -r requirements.txt
 ```
 
 Run the games with the virtual environment activated (or call
