@@ -388,7 +388,14 @@ class MinerBase:
             direction = LodeRunner.DIR_DOWN
 
         (off_x, off_y), tiles = self._get_tiles((x, y))
-        if off_x or off_y:
+        # While mid-tile, the current step must be finished first (a new
+        # direction only takes effect after a turn-around). Never let this
+        # override a fall, and never apply it when there is no pending step
+        # (sprite_dir = NONE): otherwise a held UP key on the landing tick
+        # of a fall turns into a failed climb, freezing the mover with
+        # sprite_dir = NONE at a sub-tile position, from which no input can
+        # ever recover (this happened when entering a level still holding UP).
+        if (off_x or off_y) and not fall and self.sprite_dir != LodeRunner.DIR_NONE:
             if direction != self.sprite_dir ^ 2:
                 direction = self.sprite_dir
 
@@ -686,6 +693,7 @@ class LodeRunner:
 
         pygame.time.set_timer(self.TIMER_REFRESH, tick_ms)
         game_over = False
+        died = False
         direction = self.DIR_NONE
         self._find_paths()
 
@@ -731,6 +739,7 @@ class LodeRunner:
                             moving = True
                         if pygame.sprite.collide_rect(self.player.sprite, enemy.sprite):
                             pygame.time.wait(5000)
+                            died = True
                             game_over = True
                 pygame.display.update()
             if event.type == pygame.KEYDOWN:
@@ -743,6 +752,138 @@ class LodeRunner:
                         direction = LodeRunner.DIR_NONE
             if event.type == pygame.QUIT:
                 game_over = True
+
+        # True when the player was caught: the caller returns to the
+        # welcome screen. False when the game was won or the window closed.
+        return died
+
+
+class IntroScreen:
+    """Animated title screen shown before the game starts.
+
+    A strip of bricks with gold piles and an escape ladder forms the
+    floor, miners walk back and forth over it and a blinking prompt
+    waits for the player. run() returns True when the game should start,
+    False when the player quits.
+    """
+
+    SCALE = 3
+    FPS = 30
+    WALK_DELAY_MS = 200
+    BLINK_DELAY_MS = 500
+
+    BG_COLOR = (0, 0, 0)
+    TITLE_COLOR = (255, 255, 99)
+    SUBTITLE_COLOR = (255, 101, 0)
+    TEXT_COLOR = (170, 170, 170)
+    PROMPT_COLOR = (255, 255, 255)
+
+    START_KEYS = [pygame.K_SPACE, pygame.K_RETURN, pygame.K_KP_ENTER]
+
+    INSTRUCTIONS = ['Collect every gold pile to make the escape ladder appear',
+                    'Climb the ladder to reach the next level',
+                    'Avoid the guards - move with the arrow keys']
+
+    def __init__(self, screen):
+        tiles_w, tiles_h = screen['size']
+        tile_w, tile_h = screen['tile_size']
+        self.width = tiles_w * tile_w * self.SCALE
+        self.height = tiles_h * tile_h * self.SCALE
+        self.display = pygame.display.set_mode((self.width, self.height))
+        pygame.display.set_caption('Lode Runner')
+        self.floor_y = self.height - tile_h * self.SCALE
+
+        self.background = pygame.Surface((self.width, self.height))
+        self.background.fill(self.BG_COLOR)
+        self._draw_tiles(screen)
+        self._draw_texts()
+        self.miners = [self._create_miner(screen['player_colors'], self.width * 0.12, 3),
+                       self._create_miner(screen['miner_colors'], self.width * 0.45, 2),
+                       self._create_miner(screen['miner_colors'], self.width * 0.72, 2)]
+
+    def _draw_tiles(self, screen):
+        colors = screen['colors']
+        brick = _init_surface(bricks, colors, self.SCALE, False, False)[1]
+        for x in range(0, self.width, brick.get_width()):
+            self.background.blit(brick, (x, self.floor_y))
+
+        gold = _init_surface(gold_pile, colors, self.SCALE, False, False)[1]
+        for fraction in [0.07, 0.3, 0.66, 0.91]:
+            self.background.blit(gold, (int(self.width * fraction), self.floor_y - gold.get_height()))
+
+        ladder_tile = _init_surface(ladder, colors, self.SCALE, False, False)[1]
+        ladder_x = self.width // 2 - ladder_tile.get_width() // 2
+        for rungs in range(1, 5):
+            self.background.blit(ladder_tile, (ladder_x, self.floor_y - rungs * ladder_tile.get_height()))
+
+    def _draw_texts(self):
+        title_font = pygame.font.SysFont('monospace', 72, bold=True)
+        text_font = pygame.font.SysFont('monospace', 24, bold=True)
+        self._draw_text('LODE RUNNER', title_font, self.TITLE_COLOR, self.height * 0.2)
+        self._draw_text('Can you outsmart the guards?', text_font, self.SUBTITLE_COLOR, self.height * 0.32)
+        for i, line in enumerate(self.INSTRUCTIONS):
+            self._draw_text(line, text_font, self.TEXT_COLOR, self.height * (0.47 + 0.07 * i))
+        self.prompt = text_font.render('Press SPACE to start - ESC to quit', True, self.PROMPT_COLOR)
+        self.prompt_rect = self.prompt.get_rect(center=(self.width // 2, int(self.height * 0.78)))
+
+    def _draw_text(self, text, font, color, bottom):
+        surface = font.render(text, True, color)
+        self.background.blit(surface, surface.get_rect(midbottom=(self.width // 2, int(bottom))))
+
+    def _create_miner(self, colors, start_x, step_px):
+        # same orientation as in-game: DIR_RIGHT uses the flipped sprites,
+        # DIR_LEFT the unflipped ones (see _create_miner_images)
+        frames = {right: [_init_surface(image, colors, self.SCALE, right, True)[1]
+                          for image in images]
+                  for right, images in [(True, [miner3, miner2, miner1]),
+                                        (False, [miner1, miner2, miner3])]}
+        return {'frames': frames, 'right': True, 'frame': 0, 'step_px': step_px,
+                'x': start_x, 'y': self.floor_y - 11 * self.SCALE}
+
+    def _step_miners(self):
+        for miner in self.miners:
+            miner['frame'] = (miner['frame'] + 1) % len(miner['frames'][miner['right']])
+            miner['x'] += miner['step_px'] if miner['right'] else -miner['step_px']
+            # clamp against the width of the frame that will be drawn next
+            if miner['x'] + miner['frames'][miner['right']][miner['frame']].get_width() > self.width:
+                miner['right'] = False
+                miner['x'] = self.width - miner['frames'][False][miner['frame']].get_width()
+            elif miner['x'] < 0:
+                miner['right'] = True
+                miner['x'] = 0
+
+    def _draw(self, show_prompt):
+        self.display.blit(self.background, (0, 0))
+        for miner in self.miners:
+            self.display.blit(miner['frames'][miner['right']][miner['frame']], (int(miner['x']), miner['y']))
+        if show_prompt:
+            self.display.blit(self.prompt, self.prompt_rect)
+        pygame.display.update()
+
+    def run(self):
+        # drop stale events (e.g. keys pressed at the moment the player
+        # died) so they cannot dismiss the welcome screen right away
+        pygame.event.clear()
+        clock = pygame.time.Clock()
+        walk_timer = 0
+        blink_timer = self.BLINK_DELAY_MS
+        show_prompt = False
+        while True:
+            elapsed_ms = clock.tick(self.FPS)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+                    return False
+                if event.type == pygame.KEYDOWN and event.key in self.START_KEYS:
+                    return True
+            walk_timer += elapsed_ms
+            if walk_timer >= self.WALK_DELAY_MS:
+                walk_timer -= self.WALK_DELAY_MS
+                self._step_miners()
+            blink_timer += elapsed_ms
+            if blink_timer >= self.BLINK_DELAY_MS:
+                blink_timer -= self.BLINK_DELAY_MS
+                show_prompt = not show_prompt
+            self._draw(show_prompt)
 
 
 # Tile definitions shared by all levels: (bitmap, solid/behavior mask)
@@ -861,5 +1002,12 @@ parser.add_argument('--level', type=level_arg, default=1, metavar='LEVEL',
                     help=f'level to start on, 1 to {len(screens)} (default: 1)')
 
 args = parser.parse_args()
-sg = LodeRunner(screens, args.level - 1)
-sg.mainloop(args.tick_ms)
+pygame.init()
+show_intro = True
+while show_intro:
+    if not IntroScreen(screens[0]).run():
+        break
+    sg = LodeRunner(screens, args.level - 1)
+    # back to the welcome screen when the player dies, exit otherwise
+    show_intro = sg.mainloop(args.tick_ms)
+pygame.quit()
