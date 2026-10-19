@@ -1,7 +1,7 @@
 # pygames
 
 A small collection of retro games written in Python with
-[pygame](https://www.pygame.org/).
+[pygame-ce](https://pyga.me/) (the community edition of pygame).
 
 ## Games
 
@@ -59,12 +59,14 @@ Controls:
 ## Setup
 
 Requirements: Python 3 and the packages listed in [requirements.txt](requirements.txt)
-(currently [pygame](https://www.pygame.org/)).
+(currently [pygame-ce](https://pyga.me/), the community edition of pygame).
 
-> **Note:** pygame currently ships wheels up to Python 3.12; on newer
-> interpreters (e.g. 3.13/3.14) `pip install pygame` tries to build from
-> source and fails. If your default `python3` is too new, create the
-> virtual environment with an older interpreter:
+> **Note:** pygame-ce is a drop-in replacement for pygame: it installs the
+> same `pygame` module, so the game code needs no changes. Unlike classic
+> pygame, pygame-ce ships wheels for recent Python versions, so a plain
+> `pip install -r requirements.txt` usually works on a current interpreter.
+> If no wheel is available for your Python version, create the virtual
+> environment with an older interpreter instead:
 
 ```sh
 python3.12 -m venv .venv
